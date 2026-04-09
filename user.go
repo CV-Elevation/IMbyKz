@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
@@ -70,6 +71,21 @@ func (u *User) DoMessage(msg string) {
 			u.SendMsg(onlineMsg)
 		}
 		u.server.mapLock.Unlock()
+	} else if len(msg) > 7 && msg[:7] == "rename|" {
+		newName := strings.Split(msg, "|")[1]
+		//validate the newName
+		_, ok := u.server.OnlineMap[newName]
+		if ok {
+			u.SendMsg("当前用户名已被占用\n")
+		} else {
+			u.server.mapLock.Lock()
+			delete(u.server.OnlineMap, u.Name)
+			u.server.OnlineMap[newName] = u
+			u.server.mapLock.Unlock()
+			u.Name = newName
+			u.SendMsg("您已经更新用户名为" + u.Name + "\n")
+		}
+		u.Name = msg[7:]
 	} else {
 		u.server.BroadCast(u, msg)
 	}

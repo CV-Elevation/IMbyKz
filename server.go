@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net"
 	"sync"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 type Server struct {
@@ -62,10 +66,13 @@ func (s *Server) Handler(conn net.Conn) {
 				fmt.Println("Conn Read err:", err)
 				return
 			}
-			//remove the char '\n'and '\r'
+
+			//linux
 			//msg := string(buf[:n-1])
 			//windows
-			msg := string(buf[:n-2])
+			//remove the char '\n'and '\r'
+			msg, _ := DecodeToGBK(buf[:n-2])
+
 			user.DoMessage(msg)
 		}
 
@@ -73,6 +80,19 @@ func (s *Server) Handler(conn net.Conn) {
 
 	//block
 	select {}
+}
+
+func DecodeToGBK(input []byte) (string, error) {
+	// 1. 创建一个解码器转换流 (GBK -> UTF-8)
+	reader := transform.NewReader(bytes.NewReader(input), simplifiedchinese.GBK.NewDecoder())
+
+	// 2. 读取所有转换后的数据
+	output, err := io.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
+
+	return string(output), nil
 }
 
 func (s *Server) Start() {
