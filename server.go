@@ -47,29 +47,26 @@ func (s *Server) BroadCast(user *User, msg string) {
 func (s *Server) Handler(conn net.Conn) {
 	//service
 	//fmt.Println("success")
-	user := NewUser(conn)
-	//user turn on ,add user to map
-	s.mapLock.Lock()
-	s.OnlineMap[user.Name] = user
-	s.mapLock.Unlock()
-	//broad to all user
-	s.BroadCast(user, "当前用户已上线")
+	user := NewUser(conn, s)
+	user.Online()
 
 	go func() {
 		buf := make([]byte, 4096)
 		for {
 			n, err := conn.Read(buf)
 			if n == 0 {
-				s.BroadCast(user, "下线")
+				user.Offline()
 				return
 			}
 			if err != nil && err != io.EOF {
 				fmt.Println("Conn Read err:", err)
 				return
 			}
-			//remove the char '\n'
-			msg := string(buf[:n-1])
-			s.BroadCast(user, msg)
+			//remove the char '\n'and '\r'
+			//msg := string(buf[:n-1])
+			//windows
+			msg := string(buf[:n-2])
+			user.DoMessage(msg)
 		}
 
 	}()
