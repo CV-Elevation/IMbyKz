@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"sync"
 )
@@ -53,6 +54,25 @@ func (s *Server) Handler(conn net.Conn) {
 	s.mapLock.Unlock()
 	//broad to all user
 	s.BroadCast(user, "当前用户已上线")
+
+	go func() {
+		buf := make([]byte, 4096)
+		for {
+			n, err := conn.Read(buf)
+			if n == 0 {
+				s.BroadCast(user, "下线")
+				return
+			}
+			if err != nil && err != io.EOF {
+				fmt.Println("Conn Read err:", err)
+				return
+			}
+			//remove the char '\n'
+			msg := string(buf[:n-1])
+			s.BroadCast(user, msg)
+		}
+
+	}()
 
 	//block
 	select {}
