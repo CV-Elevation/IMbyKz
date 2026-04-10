@@ -66,12 +66,15 @@ func (s *Server) Handler(conn net.Conn) {
 				fmt.Println("Conn Read err:", err)
 				return
 			}
-
-			//linux
-			//msg := string(buf[:n-1])
+			var msg string
 			//windows
 			//remove the char '\n'and '\r'
-			msg, _ := DecodeToGBK(buf[:n-2])
+			if osPlatform == "windows" && charset == "GBK" {
+				msg, _ = DecodeToGBK(buf[:n-2])
+			} else {
+				//linux mac
+				msg = string(buf[:n-1])
+			}
 
 			user.DoMessage(msg)
 		}
