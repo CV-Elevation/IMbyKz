@@ -22,6 +22,9 @@ func main() {
 		fmt.Println(">>>>>>>connect to server error......")
 		return
 	}
+	go c.DealResponse()
+
 	fmt.Println(">>>>>>>connect to server succeed......")
 
+	c.Run()
 }

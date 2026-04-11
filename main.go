@@ -9,8 +9,8 @@ var osPlatform string
 var charset string
 
 func main() {
-	flag.StringVar(&osPlatform, "os", "windows", "os")
-	flag.StringVar(&charset, "charset", "GBK", "charset")
+	flag.StringVar(&osPlatform, "os", "linux", "os")
+	flag.StringVar(&charset, "charset", "UTF-8", "charset")
 	flag.Parse()
 	fmt.Println(osPlatform, charset)
 
