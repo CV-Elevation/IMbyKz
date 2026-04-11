@@ -99,6 +99,30 @@ func (u *User) DoMessage(msg string) {
 			u.SendMsg("您已经更新用户名为" + u.Name + "\n")
 		}
 		u.Name = msg[7:]
+	} else if len(msg) > 4 && msg[:3] == "to|" {
+		//message format: to|username|msg
+		parts := strings.Split(msg, "|")
+		if len(parts) != 3 {
+			u.SendMsg("消息格式不正确")
+			return
+		}
+		//get username
+		username := parts[1]
+		msg := parts[2]
+		if msg == "" {
+			u.SendMsg("消息为空")
+			return
+		}
+		//get user from onlinemap with username
+		u.server.mapLock.Lock()
+		toUser, ok := u.server.OnlineMap[username]
+		u.server.mapLock.Unlock()
+		if !ok {
+			u.SendMsg("该用户不存在")
+			return
+		}
+		//conn to user
+		toUser.SendMsg(u.Name + " said to you: " + msg)
 	} else {
 		u.server.BroadCast(u, msg)
 	}

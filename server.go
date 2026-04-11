@@ -89,7 +89,7 @@ func (s *Server) Handler(conn net.Conn) {
 		select {
 		case <-isLive: //do nothing just refresh timer
 			fmt.Println("refresh", user.Name)
-		case <-time.After(time.Second * 10):
+		case <-time.After(time.Second * 300):
 			user.SendMsg("你被踢了")
 			//close resource
 			close(user.C)
