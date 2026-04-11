@@ -39,9 +39,12 @@ func (u *User) ListenMessage() {
 		if !ok {
 			return
 		}
-		gbkBytes, _ := simplifiedchinese.GBK.NewEncoder().Bytes([]byte(msg + "\n"))
-		u.conn.Write([]byte(gbkBytes))
-		// u.conn.Write([]byte(msg + "\n"))
+		if charset == "GBK" {
+			gbkBytes, _ := simplifiedchinese.GBK.NewEncoder().Bytes([]byte(msg + "\n"))
+			u.conn.Write([]byte(gbkBytes))
+		} else {
+			u.conn.Write([]byte(msg + "\n"))
+		}
 	}
 }
 
@@ -62,10 +65,13 @@ func (u *User) Offline() {
 }
 
 func (u *User) SendMsg(msg string) {
-	gbkBytes, _ := simplifiedchinese.GBK.NewEncoder().Bytes([]byte(msg + "\n"))
-	u.conn.Write([]byte(gbkBytes))
-	//u.conn.Write([]byte(msg))
-	//to meet the gbk...
+	if charset == "GBK" {
+		gbkBytes, _ := simplifiedchinese.GBK.NewEncoder().Bytes([]byte(msg + "\n"))
+		u.conn.Write([]byte(gbkBytes))
+	} else {
+		//to meet the gbk...
+		u.conn.Write([]byte(msg))
+	}
 }
 
 // the service of handling user message
