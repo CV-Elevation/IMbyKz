@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"time"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -53,7 +54,7 @@ func (s *Server) Handler(conn net.Conn) {
 	//fmt.Println("success")
 	user := NewUser(conn, s)
 	user.Online()
-
+	isLive := make(chan bool)
 	go func() {
 		buf := make([]byte, 4096)
 		for {
@@ -74,12 +75,28 @@ func (s *Server) Handler(conn net.Conn) {
 			msg, _ := DecodeToGBK(buf[:n-2])
 
 			user.DoMessage(msg)
+
+			isLive <- true
 		}
 
 	}()
 
 	//block
-	select {}
+	for {
+		select {
+		case <-isLive: //do nothing just refresh timer
+			fmt.Println("refresh", user.Name)
+		case <-time.After(time.Second * 10):
+			user.SendMsg("你被踢了")
+			//close resource
+			close(user.C)
+
+			//close connection
+			conn.Close()
+
+			return //or runtime.Goexit
+		}
+	}
 }
 
 func DecodeToGBK(input []byte) (string, error) {

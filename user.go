@@ -35,7 +35,10 @@ func NewUser(conn net.Conn, server *Server) *User {
 // listen the conn,send to client
 func (u *User) ListenMessage() {
 	for {
-		msg := <-u.C
+		msg, ok := <-u.C
+		if !ok {
+			return
+		}
 		gbkBytes, _ := simplifiedchinese.GBK.NewEncoder().Bytes([]byte(msg + "\n"))
 		u.conn.Write([]byte(gbkBytes))
 		// u.conn.Write([]byte(msg + "\n"))
@@ -51,6 +54,10 @@ func (u *User) Online() {
 }
 
 func (u *User) Offline() {
+	u.server.mapLock.Lock()
+	delete(u.server.OnlineMap, u.Name)
+	u.server.mapLock.Unlock()
+
 	u.server.BroadCast(u, "下线")
 }
 
